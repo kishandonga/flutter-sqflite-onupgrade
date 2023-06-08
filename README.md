@@ -1,4 +1,4 @@
-# Flutter Sqflite onUpgrade
+# Flutter Sqflite onUpgrade()
 
 Hi! I'm trying to understand how **onUpgread()** or we can say database migration works in the **SQLite** database, I thought let's share my experience on it so, everyone can get ideas and implement it accordingly.
 
@@ -12,15 +12,17 @@ App looks like:
 
 ### Create or init database with the Version No. 1
 
-    await  openDatabase(
-    	dbPath,
-    	version:  1,
-    	onCreate: _createDb,
-    );
-    
-    void  _createDb(Database  db, int  version) async {
-    	debugPrint('Database Version onCreate: $version');
-    }
+```dart
+await  openDatabase(
+	dbPath,
+	version:  1,
+	onCreate: _createDb,
+);
+
+void  _createDb(Database  db, int  version) async {
+	debugPrint('Database Version onCreate: $version');
+}
+```
 
 ohh wow! it is so simple let's check output of the above code:
 
@@ -32,15 +34,17 @@ Yup! My work is done let me publish this app to the Play Store or App Store Hurr
 
 Now, what? let me upgrade the database but how? now comes in the picture **onUpgread()** method, please check the below code snippets.
 
-    await  openDatabase(
-    	dbPath,
-    	version:  2,
-    	onUpgrade: _upgradeDb,
-    );
-    
-    void  _upgradeDb(Database  db, int  oldVersion, int  newVersion) {
-    	debugPrint('Database Version onUpgrade: OLD: $oldVersion NEW: $newVersion');
-    }
+```dart
+await  openDatabase(
+	dbPath,
+	version:  2,
+	onUpgrade: _upgradeDb,
+);
+
+void  _upgradeDb(Database  db, int  oldVersion, int  newVersion) {
+	debugPrint('Database Version onUpgrade: OLD: $oldVersion NEW: $newVersion');
+}
+```
 
 let's check output of the above code:
 
@@ -60,51 +64,54 @@ oh my god! app database log is scary, check below log
 
 ![](images/1.png)
 
-What happens with the last 4 versions of the database like it is skipped? But if you read the documentation carefully over there mention like if the database file is not found then create a new file with the given version now look in the case your database version is 5 and you install the fresh app so the system creates a new database file with the version code 5.
+What happens with the first 4 versions of the database like it is skipped? But if you read the documentation carefully over there mention like if the database file is not found then create a new file with the given version now look into in our case database version is 5 and you install the fresh app so the system creates a new database file with the version code 5.
 
 ## Let's work on the Solutions
 
-It is final we have you follow in the sequential manner where is it a case of the onCreate or onUpgread() but how? Check below code snippets.
+It is final we have to follow the sequential manner where is it a case of the onCreate or onUpgread() but how? Check below code snippets.
 
-    await openDatabase(  
-    	dbPath,  
-    	version: 1,  
-    	onCreate: (Database db, int newVersion) async {  
-    		for (int version = 0; version < newVersion; version++) {  
-    			await _performDbOperationsVersionWise(db, version + 1);  
-    		}  
-    	},  
-    	onUpgrade: (Database db, int oldVersion, int newVersion) async {  
-    		for (int version = oldVersion; version < newVersion; version++) {  
-    			await _performDbOperationsVersionWise(db, version + 1);  
-    		}  
-    	},  
-    );
-    
-    _performDbOperationsVersionWise(Database db, int version) async {  
-    	switch (version) {  
-    	case 1:  
-    	await _databaseVersion1(db);  
-    	break;  
-    	case 2:  
-    	await _databaseVersion2(db);  
-    	break;  
-    	case 3:  
-    	await _databaseVersion3(db);  
-    	break;  
-    	case 4:  
-    	await _databaseVersion4(db);  
-    	break;  
-    	case 5:  
-    	await _databaseVersion5(db);  
-    	break;  
-    	}  
-    }  
-      
-    _databaseVersion1(Database db) {  
-    	debugPrint('Database Version: 1');  
-    }
-    ....
+```dart
+await openDatabase(  
+	dbPath,  
+	version: 1,  
+	onCreate: (Database db, int newVersion) async {  
+		for (int version = 0; version < newVersion; version++) {  
+			await _performDbOperationsVersionWise(db, version + 1);  
+		}  
+	},  
+	onUpgrade: (Database db, int oldVersion, int newVersion) async {  
+		for (int version = oldVersion; version < newVersion; version++) {  
+			await _performDbOperationsVersionWise(db, version + 1);  
+		}  
+	},  
+);
+
+_performDbOperationsVersionWise(Database db, int version) async {  
+	switch (version) {  
+	case 1:  
+	await _databaseVersion1(db);  
+	break;  
+	case 2:  
+	await _databaseVersion2(db);  
+	break;  
+	case 3:  
+	await _databaseVersion3(db);  
+	break;  
+	case 4:  
+	await _databaseVersion4(db);  
+	break;  
+	case 5:  
+	await _databaseVersion5(db);  
+	break;  
+	}  
+}  
+  
+_databaseVersion1(Database db) {  
+	debugPrint('Database Version: 1');  
+}
+
+....
+```
 
 Let's consider the case of **onCreate()** now if we can install a fresh application and database version is 5 then it will execute all version one by one.
 
